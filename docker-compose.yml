@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   mlops-api:
     build: .
@@ -7,7 +5,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - MLFLOW_TRACKING_URI=http://mlflow:5001
+      - MLFLOW_TRACKING_URI=sqlite:///mlflow/mlflow.db
       - EXPERIMENT_NAME=mlops-pipeline
       - MODEL_TYPE=gradient_boosting
       - TUNING_N_ITER=20
@@ -17,21 +15,21 @@ services:
       - PORT=5000
     volumes:
       - ./models:/app/models
-    depends_on:
-      - mlflow
+      - mlflow-data:/app/mlflow
     restart: unless-stopped
 
-  mlflow:
-    image: ghcr.io/mlflow/mlflow:v2.8.0
+  mlflow-ui:
+    image: ghcr.io/mlflow/mlflow:latest
     container_name: mlflow-server
     ports:
       - "5001:5001"
-    command: >
+    command: 
       mlflow server
       --host 0.0.0.0
       --port 5001
-      --backend-store-uri sqlite:///mlflow.db
+      --backend-store-uri sqlite:///mlflow/mlflow.db
       --default-artifact-root /mlflow/artifacts
+      --allowed-hosts "*"
     volumes:
       - mlflow-data:/mlflow
     restart: unless-stopped
